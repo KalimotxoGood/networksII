@@ -16,7 +16,7 @@ class Router{
 public:
     int* connections;
     char* id;
-    queue<link> input; // implement this using std::queue
+    queue<Link> input; // implement this using std::queue
     queue<int> output; // queue of packets (not int's)
     // table
 

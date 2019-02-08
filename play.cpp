@@ -26,6 +26,9 @@ int main()
     for(int j=0; j<=5; j++){
         
         myrouters[0].input.push(mylinks[0][j]); //pushing a link for fun. be a packet
+        cout << "link[0][" << j << "] pushed" << endl;
+        cout << "it has bandwidth: " << mylinks[0][j].bandwidth << endl;
+        
     }
    
     while(myrouters[0].input.size() != 0 ){ // checking that the routers are created and pop works
