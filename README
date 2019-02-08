@@ -1,0 +1,10 @@
+
+-----------------------------------
+Global Timer
+-----------------------------------
+-----------------------------------
+Implemented via "microseconds" iterator.
+1000 seconds = 16.6mins = 996000000 micro seconds.
+The iterator thus iterates through 9.96e8 iterations.
+
+
