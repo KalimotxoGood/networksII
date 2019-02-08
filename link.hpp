@@ -10,12 +10,11 @@ struct link
 {
    // double bandwidth;
     //double delay;
-
-    double bandwidth = mbps(generator);
-    double delay = ten_secs(generator);
-   
-     
     
+    double bandwidth = 0;// = mbps(generator);
+    double delay = 0; //= ten_secs(generator);
+   
+    // generate outside    
 
 };
 
