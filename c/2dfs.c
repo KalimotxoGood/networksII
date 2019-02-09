@@ -18,31 +18,33 @@ void main()
 int A[5][5] = {
     {0,1,0,1,0},
     {1,0,0,1,0},
-    {0,0,0,0,0},
+    {0,0,0,0,1},
     {1,1,0,0,1},
-    {0,0,0,1,0}
+    {0,0,,1,0}
 };
     //visited is initialized to zero
     for(i=0;i<n;i++)
         visited[i]=0;
     int k = 0;
     int l = 0;
-    while(1){
-
-        if(l==n&&A[k][l]==0) break;
-        printf("%d\n", k);
+    for(int o = 0; o < 50; o++){
+//while(1){ //Basically need to find an ending condition to BREAK!
+//otherwise, just loop for a V^2 time if I must implement this iteratively
+//if(l==n&&A[k][l]==0){printf("%d break!!! \n ", o);break;}//invalid
+        
+        printf("k is: %d\n", k);
         for(l=0;l<n;l++) {
-            printf("for\n");
+           
+//            printf("visited[%d]:%d \nA[%d][%d]:%d \n",l, visited[l],k,l,A[k][l]);
+            printf("visited[%d] is: %d\n",l, visited[l]);
             if(!visited[l]&&A[k][l]==1) {
                 k = l;
                 visited[k] = 1; 
-printf("break\n");
+                printf("k=%d\n",l);
                 break;
             }
-            else { printf("else\n");break;}
-printf("no break\n");
+            
         }
-       
     }
     printf("end\n");
  
