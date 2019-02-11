@@ -21,13 +21,13 @@ class Link
     }
     void setBD(double band, double del) {
       cout << band << del << "-----" << endl;
-        if(band || del == 0){
-// cout <<"yo" <<endl; //test
-            bandwidth = 0;   //mbps(generator);  //= 0;
-            delay = 0;       //ten_secs(generator); // =0;
+        if(bandwidth == 0){
+ cout <<"yo" <<endl;
+            bandwidth = band;   //mbps(generator);  //= 0;
+            delay = del;       //ten_secs(generator); // =0;
         }
         else {
-//cout <<"sup"<<endl; //test
+cout <<"sup"<<endl;
             bandwidth = mbps(generator);
             delay = ten_secs(generator);
         }

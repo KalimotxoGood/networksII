@@ -8,7 +8,6 @@
 int microseconds = 1;
 //void DFS(int);
 
-void DFS(int, array<array<Link,9>,9>,const int);
 
 int main()
 {
@@ -24,7 +23,13 @@ int main()
 // 9 vertices
     Link mylinks[vertices][vertices] ; // create the adjacency matrix of links. All initlized to '0'
     std:array<std::array<Link, 9>, 9> mylink;
+    cout << mylink[0][1].getBandwidth() << endl;
 /* testing std:array of links */
+    for (int i =0; i <8; i++){
+        for(int j =0; j<8;j++) {
+            cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylink[i][j].getBandwidth() << endl;
+        }
+    }
 
 
     Router myrouters[vertices]; // create the routers corresponding to the links.
@@ -33,7 +38,7 @@ int main()
     int k = 0;
     int l = 0;
 
-    DFS(0, mylink, 9);
+//    DFS(0);
 
     //connectedLinks(&mylinks); // runs until we get a connected graph!
 
@@ -48,24 +53,12 @@ int main()
 }
 
 /*
-Depth First Search
-Takes as arguments: visited node index, adjacency matrix of links, and number of vertices (,respectively). 
-Returns: true if connected, false otherwise.
-Implementation technique: Used as a functor in while-loop that creates more edges while DFS returns false.
-
-*/
-void DFS(int i, array<array<Link,9>,9> mylinks,const int vertices){
+void DFS(int i, array nodes[], int vertices){
     int j;
     cout << i << endl;
-    for (int i =0; i <9; i++){
-        for(int j =0; j<9;j++) {
-            cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylinks[i][j].getBandwidth() << endl;
-            cout << "we out hee bih" <<endl;
-        }
-    }
-
-/*
-    nodes[i] = 1;"
-    for(j=0;j<vertices;j++) DFS(j);*/
+    nodes[i] = 1;
+    for(j=0;j<vertices;j++) DFS(j);
 }
+}
+*/
 

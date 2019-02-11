@@ -1,0 +1,1 @@
+the constructor passes the correct function parameters to set the values but it doesnt enter the condition correctly. 0 isn't initialized. 
