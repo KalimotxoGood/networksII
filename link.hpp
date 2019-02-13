@@ -20,16 +20,21 @@ class Link
         
     }
     void setBD(double band, double del) {
-      cout << band << del << "-----" << endl;
+   //   cout << band << del << "-----" << endl;
         if(band==0|| del == 0){ //lmao i had this as (band || del == 0) 
             bandwidth = 0;   //mbps(generator);  //= 0;
             delay = 0;       //ten_secs(generator); // =0;
         }
-        else{
+        else if(band==1||del == 1){
             bandwidth = mbps(generator);
             delay = ten_secs(generator);
         }
+        else {
+            bandwidth = band;
+            delay = delay;
+        }
     }
+    
     double getBandwidth(){
         return bandwidth;
     }

@@ -18,6 +18,6 @@ public:
     char* id;
     queue<Link> input; // implement this using std::queue
     queue<int> output; // queue of packets (not int's)
-    // table
+    //table
 
 };
