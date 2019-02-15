@@ -1,5 +1,6 @@
 #include <iostream> 
 #include <random>
+#include <limits.h>
 //#include "link.hpp"
 #include "manip_time.hpp"
 #include "router.hpp"
@@ -8,18 +9,20 @@
 int microseconds = 1;
 //void DFS(int);
 
-const int vertices = 150;
+using namespace std;
+const int vertices = 9;
 //int visited[vertices];
 array<int,vertices> visited;
 //vector<int> visited;
 int visite =0;
 
+
+void dijkstra(array<array<Link,vertices>, vertices> mylinks, const int src);
 bool DFS(int, array<array<Link,vertices>,vertices> &,const int); 
 //Matrix PASSED BY REFERENCE
 
 int main()
 {
-    using namespace std;
     int seed = 3; // get consistend use 'generations'
 //distribution(generator);
     default_random_engine generator(seed);
@@ -58,6 +61,7 @@ int main()
         }
    
      }
+}
 
 /*
     for(int j=0; j<=vertices; j++){
@@ -70,8 +74,57 @@ int main()
 */
 //cout <<"here"<<endl;
 //    cout << DFS(0,mylink,5) << endl;
+
+int minDistance(int dist[], bool sptSet[])
+{
+    // Initialize min value
+    int min = INT_MAX, min_index;
+        
+    for (int v = 0; v < vertices; v++)
+        if (sptSet[v] == false && dist[v] <= min)
+            min = dist[v], min_index = v;
+        
+    return min_index;
 }
 
+void dijkstra(array<array<Link,vertices>,vertices> mylinks, const int src){
+ 
+// distnace from src to dist[i]   
+    int shortestPathTable[vertices]; //
+// keeping track of parent nodes. this is the True routing Table
+    int parent[vertices];
+    bool visitedsta[vertices]; // visitedsta[i] will be true if vertex i is finalized as shortest distance to src
+    
+    for (int i=0; i<vertices; i++)
+        shortestPathTable[i]= INT_MAX, visitedsta[i] = false;
+
+// Distance of source vertex from itself is always 0.
+    shortestPathTable[src] = 0;
+    
+// Find shortest path for all vertices
+    for (int count=0; count<vertices-1; count++)
+    {
+         // Pick the minimum distance vertex from the set of vertices not 
+        // yet processed. u is always equal to src in the first iteration.
+        int u = minDistance(shortestPathTable, visitedsta);
+        // Then, mark the picked vertex u as true;
+        visitedsta[u]=true;
+        
+
+        // Update shortestPathTable value of the adjacent vertices of u.
+        for (int v=0; v< vertices; v++){
+            int val = mylinks[v][shortestPathTable[u]].getDelay();
+            if(!visitedsta[v] && mylinks[u][v].getDelay()!=0 && shortestPathTable[u] != INT_MAX
+                && (val + mylinks[u][v].getDelay()) < shortestPathTable[v]) {
+                
+                shortestPathTable[v] = shortestPathTable[u] + mylinks[u][v].getDelay();
+                parent[v] = u;
+                
+            }
+        }    
+    }
+
+}
 /*
 Depth First Search
 Takes as arguments: visited node index, adjacency matrix of links, and number of vertices (,respectively). 

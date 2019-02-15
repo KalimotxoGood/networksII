@@ -8,7 +8,7 @@
 using namespace std;
 
 // Number of vertices in the graph
-#define V 9
+#define V 5
 
 // A utility function to find the vertex with minimum distance value, from
 // the set of vertices not yet included in shortest path tree
@@ -47,7 +47,7 @@ void dijkstra(int graph[V][V], int src)
 {
     int dist[V];     // The output array. dist[i] will hold the shortest
     // distance from src to i
-    
+    int parent[V]; // The parent node to see who is the parent of who.   
     bool sptSet[V]; // sptSet[i] will be true if vertex i is included in shortest
     // path tree or shortest distance from src to i is finalized
     
@@ -75,8 +75,14 @@ void dijkstra(int graph[V][V], int src)
             // u to v, and total weight of path from src to v through u is
             // smaller than current value of dist[v]
             if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX
-                && dist[u]+graph[u][v] < dist[v])
+                && dist[u]+graph[u][v] < dist[v]){
                 dist[v] = dist[u] + graph[u][v];
+                parent[v] = u;
+            }
+    }
+    for(int p = 0; p < V; p++){
+        cout << "This is the parent shit for source: " << parent[p] << " " ;
+cout << endl;
     }
     
     // print the constructed distance array
@@ -132,7 +138,7 @@ int main()
 {
     printtoFile();
     /* Let us create the example graph discussed above */
-    
+/*    
     int graph[V][V] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
                        {4, 0, 8, 0, 0, 0, 0, 11, 0},
                        {0, 8, 0, 7, 0, 4, 0, 0, 2},
@@ -143,14 +149,22 @@ int main()
                        {8, 11, 0, 0, 0, 0, 1, 0, 7},
                        {0, 0, 2, 0, 0, 0, 6, 7, 0}
                     };
+  */
     
+    int graph[V][V] = { {0, 3, 0, 3, 0},
+                        {3, 0, 1, 2, 0},
+                        {0, 1, 0, 0, 1},
+                        {3, 2, 0, 0, 7},
+                        {0, 0, 1, 7, 0}
+                      };
+      
     int graph2[2][2] = {{}};
     graph2[0][0] = 1;
     graph2[0][1] = 5;
     
     cout << graph2[0][0] << "\n";
     
-    dijkstra(graph, 0);
+    dijkstra(graph, 2);
     cout << "\n";
     
     
