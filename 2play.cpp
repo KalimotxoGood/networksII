@@ -10,14 +10,14 @@ int microseconds = 1;
 //void DFS(int);
 
 using namespace std;
-const int vertices = 9;
+const int vertices = 150;
 //int visited[vertices];
 array<int,vertices> visited;
 //vector<int> visited;
 int visite =0;
 
 
-void dijkstra(array<array<Link,vertices>, vertices> mylinks, const int src);
+void dijkstra(array<array<Link,vertices>, vertices> &, const int src);
 bool DFS(int, array<array<Link,vertices>,vertices> &,const int); 
 //Matrix PASSED BY REFERENCE
 
@@ -49,18 +49,30 @@ int main()
             int j = (rand()%vertices);
             int k =(rand()%vertices) ;
             if (j==k) continue;
-            mylink[j][k].setBD(1,1);
+            mylink[j][k].setBD(1,1); //set Delay and then set BD
+cout << "mylink["<<j<<"]["<<k<<"] is: " << mylink[j][k].getBandwidth() <<"and " <<mylink[j][k].getDelay();
             mylink[k][j].setBD(mylink[j][k].getBandwidth(), mylink[j][k].getDelay());
        }
     }
 
-
+    
     for (int i =0; i <vertices; i++){
         for(int j =0; j<vertices;j++) {
-            cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylink[i][j].getBandwidth() << endl;
+
+            //cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylink[i][j].getBandwidth() << "\t";
+            cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylink[i][j].getDelay() << endl;
         }
    
-     }
+    }
+
+/*
+    for (int i =0; i <vertices; i++){
+        for(int j =0; j<vertices;j++) {
+
+        }
+   
+    }
+  */  dijkstra(mylink, 0);
 }
 
 /*
@@ -87,7 +99,7 @@ int minDistance(int dist[], bool sptSet[])
     return min_index;
 }
 
-void dijkstra(array<array<Link,vertices>,vertices> mylinks, const int src){
+void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src){
  
 // distnace from src to dist[i]   
     int shortestPathTable[vertices]; //
@@ -97,10 +109,10 @@ void dijkstra(array<array<Link,vertices>,vertices> mylinks, const int src){
     
     for (int i=0; i<vertices; i++)
         shortestPathTable[i]= INT_MAX, visitedsta[i] = false;
-
+    
 // Distance of source vertex from itself is always 0.
     shortestPathTable[src] = 0;
-    
+    parent[src]= INT_MAX;
 // Find shortest path for all vertices
     for (int count=0; count<vertices-1; count++)
     {
@@ -110,19 +122,26 @@ void dijkstra(array<array<Link,vertices>,vertices> mylinks, const int src){
         // Then, mark the picked vertex u as true;
         visitedsta[u]=true;
         
-
+        
         // Update shortestPathTable value of the adjacent vertices of u.
         for (int v=0; v< vertices; v++){
             int val = mylinks[v][shortestPathTable[u]].getDelay();
             if(!visitedsta[v] && mylinks[u][v].getDelay()!=0 && shortestPathTable[u] != INT_MAX
                 && (val + mylinks[u][v].getDelay()) < shortestPathTable[v]) {
+cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
                 
                 shortestPathTable[v] = shortestPathTable[u] + mylinks[u][v].getDelay();
                 parent[v] = u;
                 
             }
         }    
+       
+        
     }
+ for(int p = 0; p < vertices; p++) {
+            cout << "This is the parent["<<p<<"]: " << parent[p] << " ";
+            cout << endl;
+        }
 
 }
 /*

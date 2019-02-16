@@ -3,7 +3,7 @@
 using namespace std;
 
 default_random_engine generator;
-uniform_real_distribution<double> mbps(0,1000000);
+uniform_real_distribution<double> mbps(0,10); //
 uniform_real_distribution<double> ten_secs(0,10);
 
 class Link
@@ -15,7 +15,7 @@ class Link
 
     Link()
     {
-        cout<<"constructor" <<endl;
+     //   cout<<"constructor" <<endl;
         setBD(0,0);
         
     }
@@ -30,8 +30,10 @@ class Link
             delay = ten_secs(generator);
         }
         else {
+cout << "setting bandwitdth" <<band <<" ";
             bandwidth = band;
-            delay = delay;
+cout << "setting delay" << del;
+            delay = del;
         }
     }
     
