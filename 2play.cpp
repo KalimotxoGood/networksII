@@ -34,14 +34,13 @@ int main()
 // create the adjacency matrix of links. All initlized to '0'
     array<array<Link, vertices>, vertices> mylink;
     Router myrouters[vertices]; 
-// create the routers corresponding to the links.
-// so far we have initialized 0 edges in mylinks
-    int visited[vertices]={0};
+    //int visited[vertices]={0}; // used in DFS
     int k = 0;
     int l = 0;
-
-   // if(DFS(0, mylink, 5)) cout << "YESSS"  << endl;
-   // else cout << "NOOO" << endl;
+/* While DFS returns an unconnected graph, connect hosts with links by numberOfHosts/2
+   DFS takes an adjacency matrix (mylink) by reference. mylink edges are updated such that 
+   the ingress/egress propagation/bandwidth numbers are symetrical as that is how we designed our network.
+*/ 
     while( !DFS(0, mylink, vertices)) {
         cout << "unconnected" << endl;
         for(int newLinks = 0; newLinks<vertices/2; newLinks++){
@@ -50,12 +49,13 @@ int main()
             int k =(rand()%vertices) ;
             if (j==k) continue;
             mylink[j][k].setBD(1,1); //set Delay and then set BD
-cout << "mylink["<<j<<"]["<<k<<"] is: " << mylink[j][k].getBandwidth() <<"and " <<mylink[j][k].getDelay();
             mylink[k][j].setBD(mylink[j][k].getBandwidth(), mylink[j][k].getDelay());
        }
     }
 
-    
+
+/* To delete! this just prints out the vertices..
+*/
     for (int i =0; i <vertices; i++){
         for(int j =0; j<vertices;j++) {
 
@@ -64,28 +64,11 @@ cout << "mylink["<<j<<"]["<<k<<"] is: " << mylink[j][k].getBandwidth() <<"and " 
         }
    
     }
-
-/*
-    for (int i =0; i <vertices; i++){
-        for(int j =0; j<vertices;j++) {
-
-        }
-   
-    }
-  */  dijkstra(mylink, 0);
-}
-
-/*
-    for(int j=0; j<=vertices; j++){
-        
-        myrouters[0].input.push(mylink[0][j]); //pushing a link for fun. be a packet
-        cout << "link[0][" << j << "] pushed" << endl;
-        cout << "it has bandwidth: " << myrouters[0].input.front().getBandwidth() << endl;
-        
-    }
+/* To delete! This is just a test to run dijkstras with node-0 in main(). 
+We run dijkstra on every router to get its routing table.
 */
-//cout <<"here"<<endl;
-//    cout << DFS(0,mylink,5) << endl;
+    dijkstra(mylink, 0);
+}
 
 int minDistance(int dist[], bool sptSet[])
 {
@@ -134,7 +117,7 @@ cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
                 parent[v] = u;
                 
             }
-        }    
+        }   
        
         
     }

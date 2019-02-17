@@ -43,11 +43,13 @@ void printSolution(int dist[], int n)
 
 // Function that implements Dijkstra's single source shortest path algorithm
 // for a graph represented using adjacency matrix representation
-void dijkstra(int graph[V][V], int src)
+
+
+void  dijkstra(int graph[V][V], int src, int *parent) // int* parent
 {
     int dist[V];     // The output array. dist[i] will hold the shortest
     // distance from src to i
-    int parent[V]; // The parent node to see who is the parent of who.   
+   // int parent[V]; // The parent node to see who is the parent of who.   
     bool sptSet[V]; // sptSet[i] will be true if vertex i is included in shortest
     // path tree or shortest distance from src to i is finalized
     
@@ -58,7 +60,7 @@ void dijkstra(int graph[V][V], int src)
     // Distance of source vertex from itself is always 0
     dist[src] = 0;
     
-    // Find shortest path for all vertices
+    // Find shortest path for ALL vertices
     for (int count = 0; count < V-1; count++)
     {
         // Pick the minimum distance vertex from the set of vertices not
@@ -69,17 +71,26 @@ void dijkstra(int graph[V][V], int src)
         sptSet[u] = true;
         
         // Update dist value of the adjacent vertices of the picked vertex.
-        for (int v = 0; v < V; v++)
+        for (int v = 0; v < V; v++) {
             
             // Update dist[v] only if is not in sptSet, there is an edge from
             // u to v, and total weight of path from src to v through u is
             // smaller than current value of dist[v]
+//cout<< "u is: " <<u << "src is: " << src <<endl;
+
             if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX
                 && dist[u]+graph[u][v] < dist[v]){
+                
                 dist[v] = dist[u] + graph[u][v];
-                parent[v] = u;
+               // else 
+ cout << "u is: " << u << endl;
+cout << "v is: " << v << endl;
+
+            if(u==src) parent[v] =v; //CHANGE
+            else parent[v] = u; // change
             }
-    }
+        }
+    }parent[src]=INT_MAX;
     for(int p = 0; p < V; p++){
         cout << "This is the parent shit for source: " << parent[p] << " " ;
 cout << endl;
@@ -159,21 +170,44 @@ int main()
                       };
       
     int graph2[2][2] = {{}};
+    int me = 0;			//me is the current node we are building a table for
     graph2[0][0] = 1;
     graph2[0][1] = 5;
-    
+   int parent[V];  // this parent array shall now be changed to nextHop[V]
+    int nextHop[V];
+    int previous = 0;
+    int previous2 = 0;
     cout << graph2[0][0] << "\n";
-    
-    dijkstra(graph, 2);
-    cout << "\n";
-    
-    
-    
-    
-        
-    
-    
-    printGraph(graph);
+    dijkstra(graph, me,parent); 
+cout << "below is the parent[] in main" << endl;
+    for(int i=0; i< V; i++){
+        cout << parent[i] << endl;
+    }
+    int currentNode = 0;
+    while(currentNode<V){
+        if(parent[currentNode]==INT_MAX) {
+            currentNode++;
+            continue;
+        }
+        int p = currentNode;
+        while(parent[p] != INT_MAX) {
+            
+            previous = parent[p];
+            nextHop[currentNode] = previous;
+            //if(previous==INT_MAX){break;}
+            p = previous;
+//currentNode = previous;
+            if(parent[previous]==p) p =me;   //previous=INT_MAX;
+           // else {previous; previous = parent[currentNode]; currentNode++;}
+              
+        }
+        cout << currentNode << endl;
+        currentNode++;
+     }
+     for(int i =0; i <V;i++){
+     cout << nextHop[i] << endl;}
+    //}
+  //  printGraph(graph);
     
     return 0;
 }
