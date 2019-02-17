@@ -204,9 +204,11 @@ cout << "below is the parent[] in main" << endl;
         cout << currentNode << endl;
         currentNode++;
      }
+cout <<endl<<" nextHop is: ";
      for(int i =0; i <V;i++){
-     cout << nextHop[i] << endl;}
-    //}
+     cout << nextHop[i] << " " ;
+    }
+cout << endl;
   //  printGraph(graph);
     
     return 0;

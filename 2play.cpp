@@ -10,14 +10,14 @@ int microseconds = 1;
 //void DFS(int);
 
 using namespace std;
-const int vertices = 150;
+const int vertices = 5;
 //int visited[vertices];
 array<int,vertices> visited;
 //vector<int> visited;
 int visite =0;
 
 
-void dijkstra(array<array<Link,vertices>, vertices> &, const int src);
+void dijkstra(array<array<Link,vertices>, vertices> &, const int src, int *);
 bool DFS(int, array<array<Link,vertices>,vertices> &,const int); 
 //Matrix PASSED BY REFERENCE
 
@@ -66,8 +66,8 @@ int main()
     }
 /* To delete! This is just a test to run dijkstras with node-0 in main(). 
 We run dijkstra on every router to get its routing table.
-*/
-    dijkstra(mylink, 0);
+*/  int parent[vertices];
+    dijkstra(mylink, 2,parent);
 }
 
 int minDistance(int dist[], bool sptSet[])
@@ -82,12 +82,12 @@ int minDistance(int dist[], bool sptSet[])
     return min_index;
 }
 
-void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src){
+void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src, int *parent){
  
 // distnace from src to dist[i]   
     int shortestPathTable[vertices]; //
 // keeping track of parent nodes. this is the True routing Table
-    int parent[vertices];
+    //int parent[vertices];
     bool visitedsta[vertices]; // visitedsta[i] will be true if vertex i is finalized as shortest distance to src
     
     for (int i=0; i<vertices; i++)
@@ -95,7 +95,7 @@ void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src){
     
 // Distance of source vertex from itself is always 0.
     shortestPathTable[src] = 0;
-    parent[src]= INT_MAX;
+   //!!! parent[src]= INT_MAX;
 // Find shortest path for all vertices
     for (int count=0; count<vertices-1; count++)
     {
@@ -108,23 +108,55 @@ void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src){
         
         // Update shortestPathTable value of the adjacent vertices of u.
         for (int v=0; v< vertices; v++){
+
             int val = mylinks[v][shortestPathTable[u]].getDelay();
             if(!visitedsta[v] && mylinks[u][v].getDelay()!=0 && shortestPathTable[u] != INT_MAX
                 && (val + mylinks[u][v].getDelay()) < shortestPathTable[v]) {
 cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
                 
                 shortestPathTable[v] = shortestPathTable[u] + mylinks[u][v].getDelay();
-                parent[v] = u;
+                if(u==src) parent[v] = v; // previous is the src then set the parent of current
+                                          //index (u) to itself(v)b/c the src must only know about 
+                                          // adjacent nodes to reach any node v
+                else parent[v] = u; //setting parent of current index to its previous
                 
             }
         }   
        
         
     }
- for(int p = 0; p < vertices; p++) {
-            cout << "This is the parent["<<p<<"]: " << parent[p] << " ";
-            cout << endl;
+    parent[src]=INT_MAX;
+    for(int p = 0; p < vertices; p++) {
+        cout << "This is the parent["<<p<<"]: " << parent[p] << " ";
+        cout << endl;
+    }
+// At this point, parent[] holds the backtracking of nodes through their parents.
+// Now, we use parent to generate nextHop[] which develops the "switching fabric" of
+// each router (node). 
+    int nextHop[vertices];
+    int currentNode=0;
+    int previous=0;
+    while(currentNode<vertices) {
+        if(parent[currentNode]==INT_MAX) {
+            currentNode++;
+            continue;
         }
+        int p = currentNode;
+        while(parent[p] != INT_MAX) {
+        
+        previous = parent[p];
+        nextHop[currentNode] = previous;
+        p = previous;
+        if(parent[previous]==p) p = src; // parent[src]==INT_MAX will cause the break in loop.
+    
+        }
+    currentNode++;
+    } nextHop[src]=INT_MAX;
+    cout << "nextHop list is: ";
+    for(int i=0;i<vertices;i++) {
+        cout << nextHop[i]<< ", ";
+    }
+    
 
 }
 /*
