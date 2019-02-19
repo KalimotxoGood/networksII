@@ -66,7 +66,8 @@ int main()
     }
 /* To delete! This is just a test to run dijkstras with node-0 in main(). 
 We run dijkstra on every router to get its routing table.
-*/  int parent[vertices];
+*/  
+    int parent[vertices];
     dijkstra(mylink, 2,parent);
 }
 
