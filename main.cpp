@@ -67,8 +67,18 @@ int main()
 /* To delete! This is just a test to run dijkstras with node-0 in main(). 
 We run dijkstra on every router to get its routing table.
 */  
-    int parent[vertices];
-    dijkstra(mylink, 2,parent);
+
+    int sTable[vertices];
+    dijkstra(mylink, 0,sTable);
+    cout << "sTable in main is" << endl;
+    for(int i =0; i< vertices; i++){
+        cout<< sTable[i] << " ";
+    } cout << "end" << endl;
+
+/*  This section creates the sTables for the routers
+    
+*/
+    
 }
 
 int minDistance(int dist[], bool sptSet[])
@@ -83,8 +93,8 @@ int minDistance(int dist[], bool sptSet[])
     return min_index;
 }
 
-void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src, int *parent){
- 
+void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src, int *sTable){
+    int parent[vertices]; // 2-19
 // distnace from src to dist[i]   
     int shortestPathTable[vertices]; //
 // keeping track of parent nodes. this is the True routing Table
@@ -134,7 +144,7 @@ cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
 // At this point, parent[] holds the backtracking of nodes through their parents.
 // Now, we use parent to generate nextHop[] which develops the "switching fabric" of
 // each router (node). 
-    int nextHop[vertices];
+   // int nextHop[vertices];
     int currentNode=0;
     int previous=0;
     while(currentNode<vertices) {
@@ -146,16 +156,16 @@ cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
         while(parent[p] != INT_MAX) {
         
         previous = parent[p];
-        nextHop[currentNode] = previous;
+        sTable[currentNode] = previous;
         p = previous;
         if(parent[previous]==p) p = src; // parent[src]==INT_MAX will cause the break in loop.
     
         }
     currentNode++;
-    } nextHop[src]=INT_MAX;
-    cout << "nextHop list is: ";
+    } sTable[src]=INT_MAX;
+    cout << "sTable list is: ";
     for(int i=0;i<vertices;i++) {
-        cout << nextHop[i]<< ", ";
+        cout << sTable[i]<< ", ";
     }
     
 
