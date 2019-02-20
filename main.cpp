@@ -10,7 +10,7 @@ int microseconds = 1;
 //void DFS(int);
 
 using namespace std;
-const int vertices = 5;
+//const int vertices = 5;
 //int visited[vertices];
 array<int,vertices> visited;
 //vector<int> visited;
@@ -23,24 +23,21 @@ bool DFS(int, array<array<Link,vertices>,vertices> &,const int);
 
 int main()
 {
-    int seed = 3; // get consistend use 'generations'
+    int seed = 3; // seed value for random number generators
 //distribution(generator);
     default_random_engine generator(seed);
     uniform_real_distribution<double> distribution(0.0, 1.0);
     double num = distribution(generator);
-    
-    cout << "uniform generator returns: " << num << endl;
-
 // create the adjacency matrix of links. All initlized to '0'
     array<array<Link, vertices>, vertices> mylink;
     Router myrouters[vertices]; 
-    //int visited[vertices]={0}; // used in DFS
-    int k = 0;
-    int l = 0;
-/* While DFS returns an unconnected graph, connect hosts with links by (numberOfHosts/2).
+    /* While DFS returns an unconnected graph, connect hosts with links by (numberOfHosts/2).
    DFS takes an adjacency matrix (mylink) by reference. mylink edges are updated such that 
    the ingress/egress propagation/bandwidth numbers are symetrical as that is how we designed our network.
-*/ 
+*/
+
+    int k = 0;
+    int l = 0;
     while( !DFS(0, mylink, vertices)) {
         cout << "unconnected" << endl;
         for(int newLinks = 0; newLinks<vertices/2; newLinks++){
@@ -51,7 +48,43 @@ int main()
             mylink[j][k].setBD(1,1); //set Delay and then set BD
             mylink[k][j].setBD(mylink[j][k].getBandwidth(), mylink[j][k].getDelay());
        }
+    } 
+/* At this point we have a connected graph. For each router in the graph we reference it via its
+index as an "id" number in the myrouters[vertices] array. We call setHopTable for each router to set its routing table with the mylink matrix.
+*/
+    for(int id=0; id < vertices; id++) { 
+        myrouters[id].setHopTable(mylink, id);
     }
+     
+/*
+   Now
+1. src/dest pairs generate packets
+
+--This is made by by choosing two end point ID's and creating packets accordingly to it.
+Implemented via creating an array of size 20 of src/dest pair structures.
+Packets are generated accordingly.
+*/
+
+
+/*
+2. packets go into a min heap (priority queue) based on time to be calculated acordingly.
+
+--While the packets are created, they get put into the min heap where they are then ordered in
+such a way that they will be served in order of time through the iterations.
+*/
+
+
+/*
+3. handle each packet accordingly
+
+	- heap.look() at type, whether it is in creation, processing, or propagation
+		-if at creation, move to outputQ of rId
+		-if at processing, move to outputq
+		-if at outputq move to propagation
+		-if at propagation move to input q
+	- each time the packet is handled, we update its time until completion accordingly.
+		
+*/
 
 
 /* To delete! this just prints out the vertices..
@@ -64,23 +97,9 @@ int main()
         }
    
     }
-/* To delete! This is just a test to run dijkstras with node-0 in main(). 
-We run dijkstra on every router to get its routing table.
-*/  
-
-    int sTable[vertices];
-    dijkstra(mylink, 0,sTable);
-    cout << "sTable in main is" << endl;
-    for(int i =0; i< vertices; i++){
-        cout<< sTable[i] << " ";
-    } cout << "end" << endl;
-
-/*  This section creates the sTables for the routers
-    
-*/
     
 }
-
+/*
 int minDistance(int dist[], bool sptSet[])
 {
     // Initialize min value
@@ -169,7 +188,7 @@ cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
     }
     
 
-}
+}*/
 /*
 Depth First Search
 Takes as arguments: visited node index, adjacency matrix of links, and number of vertices (,respectively). 
