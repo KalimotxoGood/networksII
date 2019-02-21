@@ -1,5 +1,5 @@
-sim:     main.cpp  manip_time.o
-	g++ main.cpp link.hpp router.hpp sourceDestinationPairs.hpp manip_time.o -o run
+sim:     main.cpp
+	g++ main.cpp link.hpp router.hpp sourceDestinationPairs.hpp packet.hpp manip_time.o -o run
 
 manip_time.o: manip_time.cpp manip_time.hpp
 	g++ -c manip_time.cpp manip_time.hpp
@@ -12,3 +12,6 @@ router: router.hpp
 
 sourceDestinationPairs: sourceDestinationPairs.hpp
 	g++ sourceDestinationPairs.hpp
+
+packet: packet.hpp
+	g++ packet.hpp

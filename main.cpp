@@ -1,11 +1,13 @@
 #include <iostream> 
 #include <random>
+#include <fstream>
 #include <string>
 #include <iomanip>
 #include <map>
 #include <limits.h>
 //#include "link.hpp"
 #include "manip_time.hpp"
+#include "packet.hpp"
 #include "router.hpp"
 #include "sourceDestinationPairs.hpp"
 #include <array>
@@ -21,7 +23,7 @@ array<int,vertices> visited;
 int visite =0;
 
 
-void dijkstra(array<array<Link,vertices>, vertices> &, const int src, int *);
+//void dijkstra(array<array<Link,vertices>, vertices> &, const int src, int *);
 bool DFS(int, array<array<Link,vertices>,vertices> &,const int); 
 //Matrix PASSED BY REFERENCE
 
@@ -46,7 +48,7 @@ int main()
     int l = 0;
     while( !DFS(0, mylink, vertices)) {
         cout << "unconnected" << endl;
-        for(int newLinks = 0; newLinks<vertices/2; newLinks++){
+        for(int newLinks = 0; newLinks<(vertices/15); newLinks++){
             cout <<"....making new links" << endl;
             int j = (rand()%vertices);
             int k =(rand()%vertices) ;
@@ -54,9 +56,60 @@ int main()
             mylink[j][k].setBD(1,1); //set Delay and then set BD
             mylink[k][j].setBD(mylink[j][k].getBandwidth(), mylink[j][k].getDelay());
        }
-    } 
+    }
+    for(int i = 0; i < vertices; i++) {
+        for(int j =0; j< vertices; j++) {
+            cout << "mylink["<<i<<"]["<<j<<"] : "<<mylink[i][j].getDelay() << endl;
+        }
+     }
+/*
+Write the graph into the desired file format
+*/
+    int links = 0;
+    for(int x = 0; x < vertices; x++)
+    {
+        for(int y = 0; y < vertices; y++)
+        {
+            if (mylink[x][y].getDelay() > 0)    //if there is a connection add one to link count
+            {cout << links << endl;
+             cout << "mylink["<<x<<"]["<<y<<"] : "<<mylink[x][y].getDelay() << endl;
+                links++;               //to put number of links in file
+            }
+        }
+    }
+    links = links/2; // divide by two because the links are bidirectional
+cout << links << "linkS" << endl;
+return 0;
+//cout << "links: " << links << endl;
+    std::ofstream myfile;
+    myfile.open("graph.txt");
+    if(myfile.is_open())
+    {
+        myfile << vertices << " " << links << "  \n";
+        for(int i = 0; i < vertices; i++)
+        {
+            for(int j = 0; j < vertices; j++)
+            {
+                if (mylink[i][j].getDelay() == 0.0)   //myLink.getDelay()()
+                {
+                    continue;
+                }
+
+                else {
+                    myfile << i << " " << j << "  \n";
+                }
+            }
+        }
+        myfile.close();
+    }
+    else
+    {
+        std::cerr << "didn't write" << std::endl;
+    }
+     
 /* At this point we have a connected graph. For each router in the graph we reference it via its
 index as an "id" number in the myrouters[vertices] array. We call setHopTable for each router to set its routing table with the mylink matrix.
+In each call to setHopTable, Dijkstras is run!
 */
     for(int id=0; id < vertices; id++) { 
         myrouters[id].setHopTable(mylink, id);
@@ -83,13 +136,15 @@ Packets are generated accordingly in a Poisson distribution by each of the sourc
    
     }
 
-/* Now that we Have Set Up The Network, it is time to run the simulation: 
-*/  
- 
-    for(int seconds = 0; seconds < 10; seconds++) {     
+
+// event handler priority queue to store the packets to be serviced
     
-
-
+    priority_queue <Packet, vector<Packet>, myComparator> eventHeap;
+/* Now that we Have Set Up The Network, it is time to run the simulation: 
+Below is the outer loop of the simulation set for 1000 seconds.
+*/  
+    for(int seconds = 0; seconds < 10; seconds++) {     
+        eventHeap.push(Packet(seconds));
 /*
 2. packets go into a min heap (priority queue) based on time to be calculated acordingly.
 
@@ -112,7 +167,7 @@ int no = 0;
 // 2. Create the packet and push it to the heap.
                 
 cout << src << " and " << dest << endl;
-               
+                
       yes++;}
             else{ // dont gen pkt
                 
@@ -142,6 +197,15 @@ cout << "9" << endl;
         cout << "10" << endl;
         }*/
     }// End For-Loop Outer Simulation
+    
+cout << "popping from the eventHeap" << endl;
+while(eventHeap.empty() == false) {
+    Packet p = eventHeap.top();
+    cout << "Packet " << p.getTime() << endl;
+    eventHeap.pop();
+   
+}
+
 /*
 3. handle each packet accordingly
 

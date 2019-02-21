@@ -11,36 +11,38 @@
 class Packet
 {
     public:
-    
-    setTime(double t){
+    Packet(double t){
+        setTime(t);
+    }   
+    void setTime(double t){
         time = t;
     }
    
-    setType(int ty){
+    void setType(int ty){
         type = ty;
     }
 
-    setRID(int rid){
+    void setRID(int rid){
         routerId = rid;
     }
 
-    setDest(int dest){
+    void setDest(int dest){
         destination = dest;
     }
        
-    getTime(){
+    double getTime() const {
         return time;
     }
     
-    getType(){
+    int getType(){
         return type;
     }
   
-    getRID(){
+    int getRID(){
         return routerId;
     }
    
-    getDest(){
+    int getDest(){
         return destination;
     }  
     
@@ -53,4 +55,13 @@ class Packet
     int destination; // destination static
 
 
+};
+
+class myComparator
+{
+    public:
+        int operator() (const Packet& p1, const Packet& p2) {
+            return p1.getTime() > p2.getTime();
+        }
+ 
 };
