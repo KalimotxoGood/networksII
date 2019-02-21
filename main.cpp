@@ -1,9 +1,13 @@
 #include <iostream> 
 #include <random>
+#include <string>
+#include <iomanip>
+#include <map>
 #include <limits.h>
 //#include "link.hpp"
 #include "manip_time.hpp"
 #include "router.hpp"
+#include "sourceDestinationPairs.hpp"
 #include <array>
 #include <vector>
 int microseconds = 1;
@@ -23,11 +27,13 @@ bool DFS(int, array<array<Link,vertices>,vertices> &,const int);
 
 int main()
 {
-    int seed = 3; // seed value for random number generators
+    int seed = 12; // seed value for random number generators
 //distribution(generator);
     default_random_engine generator(seed);
     uniform_real_distribution<double> distribution(0.0, 1.0);
+    poisson_distribution<int> pdistribution(5);
     double num = distribution(generator);
+    srand(seed);
 // create the adjacency matrix of links. All initlized to '0'
     array<array<Link, vertices>, vertices> mylink;
     Router myrouters[vertices]; 
@@ -55,15 +61,33 @@ index as an "id" number in the myrouters[vertices] array. We call setHopTable fo
     for(int id=0; id < vertices; id++) { 
         myrouters[id].setHopTable(mylink, id);
     }
-     
 /*
-   Now
-1. src/dest pairs generate packets
+   Now we generate a list of src/dest pairs generate packets
 
 --This is made by by choosing two end point ID's and creating packets accordingly to it.
 Implemented via creating an array of size 20 of src/dest pair structures.
-Packets are generated accordingly.
+Packets are generated accordingly in a Poisson distribution by each of the source destination pairs(TODO: nlgn search if repeat.)
 */
+    const int numberOfPairs = 20;
+    array<SDpair, numberOfPairs> mySDpairs;
+    for(int i = 0; i < numberOfPairs; i++) { // generate 20 src/dest pairs
+        int src = 1;
+        int dest = 1;
+        while(src == dest){//randomly generated integers do not cause an SD pair to send to itself
+        src = (rand()%vertices) + 1; //vertices are the number of nodes. Assumed to be 150
+        dest = (rand()%vertices) + 1; 
+        }
+        //if(mySDpairs[i].getSource() == mySDpairs[i-1].getSource()) {--i; cout <<"YOOOOOOO";break;}
+        mySDpairs[i].setSD(src,dest); // the structure holds the pairs
+        cout << "set mySDpairs["<<i<<"] to : "<<mySDpairs[i].getSource() <<"/"<< mySDpairs[i].getDestination() << endl;
+   
+    }
+
+/* Now that we Have Set Up The Network, it is time to run the simulation: 
+*/  
+ 
+    for(int seconds = 0; seconds < 10; seconds++) {     
+    
 
 
 /*
@@ -71,9 +95,53 @@ Packets are generated accordingly.
 
 --While the packets are created, they get put into the min heap where they are then ordered in
 such a way that they will be served in order of time through the iterations.
+For the number of pairs, 
 */
 
+int yes = 0;
+int no = 0;
+        for(int i =0; i<numberOfPairs; i++) {
+            cout << "--------" << i << "------------" <<endl;
+            int number = pdistribution(generator); // according to this poisson-number, an SD pair
+                                                 // generates a packet.
+            cout << "number is: " << number << endl;
+            if(number <= 5) {// gen pkt
+// 1. Get the location of source and its corresponding destination.
+                int src = mySDpairs[i].getSource();
+                int dest = mySDpairs[i].getDestination();
+// 2. Create the packet and push it to the heap.
+                
+cout << src << " and " << dest << endl;
+               
+      yes++;}
+            else{ // dont gen pkt
+                
+                
+no++;       }
+        }
+cout << "yes is: " << yes << endl;
 
+cout << "no is: " << no << endl;
+       /*
+// how many of these to generate per second??
+        int number = pdistribution(generator);
+        if(number < 3) {
+cout << "3" << endl;
+           
+        }
+        else if(number <= 5) {
+cout << "5" << endl;
+        }
+        else if(number <= 7) {
+cout << "7" << endl;
+        } 
+        else if(number <=9) {
+cout << "9" << endl;
+        }
+        else if( number > 10) {
+        cout << "10" << endl;
+        }*/
+    }// End For-Loop Outer Simulation
 /*
 3. handle each packet accordingly
 
@@ -85,117 +153,10 @@ such a way that they will be served in order of time through the iterations.
 	- each time the packet is handled, we update its time until completion accordingly.
 		
 */
+cout << "end" << endl;
+} // end main
 
 
-/* To delete! this just prints out the vertices..
-*/
-    for (int i =0; i <vertices; i++){
-        for(int j =0; j<vertices;j++) {
-
-            //cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylink[i][j].getBandwidth() << "\t";
-            cout<< "["<<i<<"]"<<"["<<j<<"]"<< mylink[i][j].getDelay() << endl;
-        }
-   
-    }
-    
-}
-/*
-int minDistance(int dist[], bool sptSet[])
-{
-    // Initialize min value
-    int min = INT_MAX, min_index;
-        
-    for (int v = 0; v < vertices; v++)
-        if (sptSet[v] == false && dist[v] <= min)
-            min = dist[v], min_index = v;
-        
-    return min_index;
-}
-
-void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src, int *sTable){
-    int parent[vertices]; // 2-19
-// distnace from src to dist[i]   
-    int shortestPathTable[vertices]; //
-// keeping track of parent nodes. this is the True routing Table
-    //int parent[vertices];
-    bool visitedsta[vertices]; // visitedsta[i] will be true if vertex i is finalized as shortest distance to src
-    
-    for (int i=0; i<vertices; i++)
-        shortestPathTable[i]= INT_MAX, visitedsta[i] = false;
-    
-// Distance of source vertex from itself is always 0.
-    shortestPathTable[src] = 0;
-   //!!! parent[src]= INT_MAX;
-// Find shortest path for all vertices
-    for (int count=0; count<vertices-1; count++)
-    {
-         // Pick the minimum distance vertex from the set of vertices not 
-        // yet processed. u is always equal to src in the first iteration.
-        int u = minDistance(shortestPathTable, visitedsta);
-        // Then, mark the picked vertex u as true;
-        visitedsta[u]=true;
-        
-        
-        // Update shortestPathTable value of the adjacent vertices of u.
-        for (int v=0; v< vertices; v++){
-
-            int val = mylinks[v][shortestPathTable[u]].getDelay();
-            if(!visitedsta[v] && mylinks[u][v].getDelay()!=0 && shortestPathTable[u] != INT_MAX
-                && (val + mylinks[u][v].getDelay()) < shortestPathTable[v]) {
-cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
-                
-                shortestPathTable[v] = shortestPathTable[u] + mylinks[u][v].getDelay();
-                if(u==src) parent[v] = v; // previous is the src then set the parent of current
-                                          //index (u) to itself(v)b/c the src must only know about 
-                                          // adjacent nodes to reach any node v
-                else parent[v] = u; //setting parent of current index to its previous
-                
-            }
-        }   
-       
-        
-    }
-    parent[src]=INT_MAX;
-    for(int p = 0; p < vertices; p++) {
-        cout << "This is the parent["<<p<<"]: " << parent[p] << " ";
-        cout << endl;
-    }
-// At this point, parent[] holds the backtracking of nodes through their parents.
-// Now, we use parent to generate nextHop[] which develops the "switching fabric" of
-// each router (node). 
-   // int nextHop[vertices];
-    int currentNode=0;
-    int previous=0;
-    while(currentNode<vertices) {
-        if(parent[currentNode]==INT_MAX) {
-            currentNode++;
-            continue;
-        }
-        int p = currentNode;
-        while(parent[p] != INT_MAX) {
-        
-        previous = parent[p];
-        sTable[currentNode] = previous;
-        p = previous;
-        if(parent[previous]==p) p = src; // parent[src]==INT_MAX will cause the break in loop.
-    
-        }
-    currentNode++;
-    } sTable[src]=INT_MAX;
-    cout << "sTable list is: ";
-    for(int i=0;i<vertices;i++) {
-        cout << sTable[i]<< ", ";
-    }
-    
-
-}*/
-/*
-Depth First Search
-Takes as arguments: visited node index, adjacency matrix of links, and number of vertices (,respectively). 
-Returns: true if connected, false otherwise.
-Implementation technique: Used as a functor in while-loop that creates more edges while DFS returns false.
-
-*/
 // template to take size_t n in lieu of '5'
 bool DFS(int i, array<array<Link,vertices>,vertices> &mylinks,const int vertices){
     int j;

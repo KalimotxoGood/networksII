@@ -2,6 +2,11 @@
 #include <random>
 using namespace std;
 
+
+/*if time permits we move these random number generators to the main. However, we at least have
+congruent connections at different runs... in addition to congruent delay/bandwidth numbers.
+perhaps, the seed in the main affects the seed in the linked file? Nevertheless this is not causing
+and issue. */
 default_random_engine generator;
 uniform_real_distribution<double> mbps(0,10); //
 uniform_real_distribution<double> ten_secs(0,10);
