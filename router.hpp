@@ -8,7 +8,9 @@
 #include <string>
 #include <queue>
 #include <array>
+#include <vector>
 #include <limits.h>
+#include <algorithm>
 const int vertices = 150;
 using namespace std;
 
@@ -26,17 +28,72 @@ public:
 For each adjacent node, create an output/input queue.
 */
     char* id;
-    //queue<sdPKT> input; // implement this using std::queue
-    //queue<sdPKT> output; // queue of source-destination packets (not int's)
-    
+    array<queue<double>, vertices> inputQueue;
+    array<queue<double>, vertices> outputQueue;
+    double serviceRate;
     int nextHopTable[vertices];
-    double lastTimeToBeServiced;
-    
+    double lastTimeToBeServiced; // this is used for each queue
+/*
+Function to set the switching fabric. Implemented in main by each router created.
+*/
     void setHopTable(array<array<Link,vertices>,vertices> &mylinks,int id){
         dijkstra(mylinks, id, nextHopTable);
     }
-};
+/*
+returns 0 if INPUT queue is full.
+*/
+    int getQueue(int endDestination){ 
 
+        int queue = nextHopTable[endDestination];
+        if(queue ==INT_MAX) return 777;
+        else if  (inputQueue[queue].size() >= 30) {
+            return 0;
+        }
+        else{
+         return queue;
+        }
+    }
+ /*
+returns 0 if OUTPUT queue is full.
+*/
+    int getOutQueue(int endDestination){ 
+
+        int queue = nextHopTable[endDestination];
+cout <<"OUTput queue size is: " << outputQueue[queue].size() << endl;
+cout <<"queue is: "<<queue<<endl;
+        if  (outputQueue[queue].size() >= 30) {
+            return 0;
+        }
+        else{
+         return queue;
+        }
+    }   
+
+    void setServiceRate(double sRate){
+        serviceRate = sRate;
+    }
+
+/*This is not necessarily needed but it takes the switching fabric and creates the interfaces
+*/
+    void makeInterfaces(){
+    vector<int> v;
+    for(const auto& x: nextHopTable) { 
+        if(find(v.begin(), v.end(), x) != v.end()){
+cout << "in it" << endl;
+        }
+        else {
+            inputQueue[x].push(x);
+            outputQueue[x];
+            v.push_back(x);
+        
+        } 
+    }
+
+}
+};
+/* this function works with the router class to generate its array of interfaces via
+inputQueue and outputQueues. 
+*/
 
 
 int minDistance(int dist[], bool sptSet[])
@@ -82,7 +139,7 @@ void dijkstra(array<array<Link,vertices>,vertices> &mylinks, const int src, int 
             int val = mylinks[v][shortestPathTable[u]].getDelay();
             if(!visitedsta[v] && mylinks[u][v].getDelay()!=0 && shortestPathTable[u] != INT_MAX
                 && (val + mylinks[u][v].getDelay()) < shortestPathTable[v]) {
-cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
+//cout << "Bandwidth is: " << mylinks[u][v].getBandwidth()<< endl;
                 
                 shortestPathTable[v] = shortestPathTable[u] + mylinks[u][v].getDelay();
                 if(u==src) parent[v] = v; // previous is the src then set the parent of current
@@ -97,8 +154,6 @@ cout << "Delay is: " << mylinks[u][v].getDelay()<< endl;
     }
     parent[src]=INT_MAX;
     for(int p = 0; p < vertices; p++) {
-        cout << "This is the parent["<<p<<"]: " << parent[p] << " ";
-        cout << endl;
     }
 // At this point, parent[] holds the backtracking of nodes through their parents.
 // Now, we use parent to generate nextHop[] which develops the "switching fabric" of

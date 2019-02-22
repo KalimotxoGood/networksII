@@ -11,8 +11,12 @@
 class Packet
 {
     public:
-    Packet(double t){
+    Packet(double t, int rid, int dest, int type, double pktSize){
         setTime(t);
+        setRID(rid);
+        setDest(dest);
+        setType(type);
+        setSize(pktSize);
     }   
     void setTime(double t){
         time = t;
@@ -29,23 +33,27 @@ class Packet
     void setDest(int dest){
         destination = dest;
     }
-       
+    void setSize(double pktSize){
+         size = pktSize;
+    }   
     double getTime() const {
         return time;
     }
     
-    int getType(){
+    int getType()const{
         return type;
     }
   
-    int getRID(){
+    int getRID()const{
         return routerId;
     }
    
-    int getDest(){
+    int getDest() const {
         return destination;
     }  
-    
+    double getSize() const { 
+          return size;
+    }
     
     private: 
     
@@ -53,6 +61,7 @@ class Packet
     int type; // creation = 0, processing = 1, output queue = 2, propagation = 3, input queue = 5
     int routerId; // update current router id each time pkt moves 3->5
     int destination; // destination static
+    double size;
 
 
 };

@@ -21,7 +21,7 @@ using namespace std;
 array<int,vertices> visited;
 //vector<int> visited;
 int visite =0;
-
+int success = 0;
 
 //void dijkstra(array<array<Link,vertices>, vertices> &, const int src, int *);
 bool DFS(int, array<array<Link,vertices>,vertices> &,const int); 
@@ -79,7 +79,7 @@ Write the graph into the desired file format
     }
     links = links/2; // divide by two because the links are bidirectional
 cout << links << "linkS" << endl;
-return 0;
+//return 0;
 //cout << "links: " << links << endl;
     std::ofstream myfile;
     myfile.open("graph.txt");
@@ -114,6 +114,16 @@ In each call to setHopTable, Dijkstras is run!
     for(int id=0; id < vertices; id++) { 
         myrouters[id].setHopTable(mylink, id);
     }
+/* set the service rate for each router according to an exponential distribution at mu = 1.0
+*/
+    exponential_distribution<double> exdistribution(1.0);
+    
+    for(int id=0; id< vertices; id++){
+        double rate = exdistribution(generator);
+        myrouters[id].setServiceRate(rate);
+//       cout << "myrouters["<<id<<"].serviceRate is: " << myrouters[id].serviceRate << endl;
+    }
+   
 /*
    Now we generate a list of src/dest pairs generate packets
 
@@ -144,7 +154,6 @@ Packets are generated accordingly in a Poisson distribution by each of the sourc
 Below is the outer loop of the simulation set for 1000 seconds.
 */  
     for(int seconds = 0; seconds < 10; seconds++) {     
-        eventHeap.push(Packet(seconds));
 /*
 2. packets go into a min heap (priority queue) based on time to be calculated acordingly.
 
@@ -155,68 +164,127 @@ For the number of pairs,
 
 int yes = 0;
 int no = 0;
-        for(int i =0; i<numberOfPairs; i++) {
-            cout << "--------" << i << "------------" <<endl;
+        for(int i =0; i<numberOfPairs; i++) { // for all sources that gen packets follow a poisson distribution for generating packets.
             int number = pdistribution(generator); // according to this poisson-number, an SD pair
                                                  // generates a packet.
-            cout << "number is: " << number << endl;
-            if(number <= 5) {// gen pkt
+            if(number <= 5) { // mu is 5 so it is more than less often that a packet is generated.
 // 1. Get the location of source and its corresponding destination.
-                int src = mySDpairs[i].getSource();
+                int rid = mySDpairs[i].getSource();
                 int dest = mySDpairs[i].getDestination();
-// 2. Create the packet and push it to the heap.
-                
-cout << src << " and " << dest << endl;
-                
-      yes++;}
+                int type = 0;
+                double time = myrouters[rid].serviceRate + seconds;
+               
+                double pktSize = distribution(generator); // pktSize generated at uniform dist.
+
+//cout << myrouters[rid].serviceRate << " + " << seconds << "= " << time << endl;
+// 2. Create the packet via its constructor and push it to the heap.
+                eventHeap.push(Packet(time, rid, dest, type, pktSize));
+                //cout << "eventHeap.top().getTime();" << eventHeap.top().getTime()<<endl;
+            }
             else{ // dont gen pkt
+            }
+        } //end generating packet loop
+        
+/*Handle the packets that have been added to the eventHeap until this current 'second'
+*/
+   cout << "-------------" << seconds <<"--------" << endl;
+        while(eventHeap.top().getTime() < seconds){
+            if(eventHeap.top().getType() == 0) {
+cout <<"type 0 handling" << endl;
+                int pktDest = eventHeap.top().getDest();
+                int curr = eventHeap.top().getRID();
+                int queue = myrouters[curr].getOutQueue(pktDest); //interface number is returned as queue
+                if(queue == 0) { cout << "DROPPED" << endl;}
+                else {
+                    myrouters[curr].outputQueue[queue].push(1); //index at the interface number 'queue'
+                }
+                int time = seconds + myrouters[curr].serviceRate;
+                int type = 2;
+                double pktSize = eventHeap.top().getSize();
+                eventHeap.pop();
+                eventHeap.push(Packet(time, curr, pktDest, type,pktSize ));
                 
-                
-no++;       }
-        }
-cout << "yes is: " << yes << endl;
+                eventHeap.pop();
+            } 
+            if(eventHeap.top().getType() == 1) {
 
-cout << "no is: " << no << endl;
-       /*
-// how many of these to generate per second??
-        int number = pdistribution(generator);
-        if(number < 3) {
-cout << "3" << endl;
-           
-        }
-        else if(number <= 5) {
-cout << "5" << endl;
-        }
-        else if(number <= 7) {
-cout << "7" << endl;
-        } 
-        else if(number <=9) {
-cout << "9" << endl;
-        }
-        else if( number > 10) {
-        cout << "10" << endl;
-        }*/
-    }// End For-Loop Outer Simulation
-    
-cout << "popping from the eventHeap" << endl;
-while(eventHeap.empty() == false) {
-    Packet p = eventHeap.top();
-    cout << "Packet " << p.getTime() << endl;
-    eventHeap.pop();
+                eventHeap.pop();
+            } 
+            if(eventHeap.top().getType() == 2) {
+cout <<"type 2" << endl;
+                int pktDest = eventHeap.top().getDest(); // get pkt dest
+                int curr = eventHeap.top().getRID(); // current router location
+                int nextHop = myrouters[curr].nextHopTable[pktDest];//get nextHop for band/delay access
+cout <<"source/dest is: " << curr<< "/" <<pktDest << endl;
+                double pktSize = eventHeap.top().getSize();
+//cout <<"pkt size is: " << pktSize << endl;
+                double bandwidth = mylink[curr][nextHop].getBandwidth();
+                double delay = mylink[curr][nextHop].getDelay();
+//cout <<"mylink returns bandwidth: " << bandwidth << " and delay " << delay << endl;
+                double time = pktSize/bandwidth + delay + seconds;
+cout <<"time is : " << time << endl;
+/* At this point the packet has left the output interface corresponding to its connected link and will now be popped out of the queue */
+cout << "next hop" << nextHop << endl;
+                myrouters[curr].outputQueue[nextHop].pop(); //popped out of queue
+                eventHeap.pop(); // popped out of eventHeap handler
+            } 
+            if(eventHeap.top().getType() == 3) {
+cout << "event 3" << endl;
+                //double processTime = eventHeap.top().getTime();
+                int pktDest = eventHeap.top().getDest(); // get pkt dest
+                int curr = eventHeap.top().getRID(); // current router location
+                int nR = myrouters[curr].nextHopTable[pktDest]; // get next hop router
+               // check if input queue of next router is full. function will return 0 ifso
+                int queue = myrouters[nR].getQueue(pktDest);
+                if(queue == 0 ) { cout << "DROPPED" << endl;} 
+                else if(queue == 777) {cout << "SUCCESS!" << success++;}
+                else {cout << "else condition" << endl;
+                    myrouters[nR].inputQueue[curr].push(1); // packet size does not need to be mentioned here since it's saved in the packet struct.
+                }
+                double time = seconds + myrouters[nR].inputQueue[curr].size() * myrouters[nR].serviceRate;
+                int type = 4;
+                double pktSize = eventHeap.top().getSize();
+
+                eventHeap.pop();
+                eventHeap.push(Packet(time, nR, pktDest, type, pktSize));
+
+            } 
+            if(eventHeap.top().getType() == 4) {
+                eventHeap.pop();
+            } 
+
    
-}
+        } 
 
-/*
+
+
+
+
+
+
+
+
+
+        
+    
+ /*
 3. handle each packet accordingly
 
 	- heap.look() at type, whether it is in creation, processing, or propagation
-		-if at creation, move to outputQ of rId
-		-if at processing, move to outputq
-		-if at outputq move to propagation
-		-if at propagation move to input q
+		-if at creation, move to outputQ of rId 0
+		-if at processing, move to outputq 1 // 0 and 1 might be same
+		-if at outputq move to propagation 2
+		-if at propagation move to input q 3
+                -if at inputq move to processing 4
 	- each time the packet is handled, we update its time until completion accordingly.
 		
 */
+
+
+
+
+
+    }// End For-Loop Outer Simulation
 cout << "end" << endl;
 } // end main
 
