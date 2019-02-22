@@ -57,11 +57,7 @@ returns 0 if INPUT queue is full.
 returns 0 if OUTPUT queue is full.
 */
     int getOutQueue(int endDestination){ 
-
         int queue = nextHopTable[endDestination];
-cout <<"OUTput queue size is: " << outputQueue[queue].size() << endl;
-cout <<"queue is: "<<queue<<endl;
-
         if(queue == INT_MAX) return 777;
         else if(outputQueue[queue].size() >= 30) {
             return 0;

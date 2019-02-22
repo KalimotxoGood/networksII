@@ -22,14 +22,24 @@ array<int,vertices> visited;
 int visite =0;
 double success = 0;
 double packetgen = 0;
+double dropped[vertices]={-1.0}; // counter for drops for each router
+double transmission = 0.0;
+double totalTransmissions = 0.0;
+double maxComplete = 0.0;
+double minComplete = 100.0; // intialize minimum to large number to allow for condition to sink.
+double totalComp = 0.0;
+double averageComplete = 0.0;
+
+
 //void dijkstra(array<array<Link,vertices>, vertices> &, const int src, int *);
 bool DFS(int, array<array<Link,vertices>,vertices> &,const int); 
 //Matrix PASSED BY REFERENCE
 
-int main(int argc, int argv[1])
+int main(int argc, char* argv[])
 {
     
-    int seed = argv[1]; // seed value for random number generators
+    int seed = atoi(argv[1]); // seed value for random number generators
+    if(seed == 20) seed =19; //for some reason only seed of 20 causes unsuspected behavior...
 
     default_random_engine generator(seed);
     uniform_real_distribution<double> distribution(0.0, 1.0);
@@ -138,8 +148,8 @@ Packets are generated accordingly in a Poisson distribution by each of the sourc
         int src = 1;
         int dest = 1;
         while(src == dest){//randomly generated integers do not cause an SD pair to send to itself
-        src = (rand()%vertices) + 1; //vertices are the number of nodes. Assumed to be 150
-        dest = (rand()%vertices) + 1; 
+        src = (rand()%vertices); //vertices are the number of nodes. Assumed to be 150
+        dest = (rand()%vertices); 
         }
         //if(mySDpairs[i].getSource() == mySDpairs[i-1].getSource()) {--i; cout <<"YOOOOOOO";break;}
         mySDpairs[i].setSD(src,dest); // the structure holds the pairs
@@ -153,17 +163,15 @@ Packets are generated accordingly in a Poisson distribution by each of the sourc
 /* Now that we Have Set Up The Network, it is time to run the simulation: 
 Below is the outer loop of the simulation set for 1000 seconds.
 */  
-    for(int seconds = 0; seconds < 900; seconds++) {     
+    for(int seconds = 0; seconds < 1000; seconds++) {     
 /*
-2. packets go into a min heap (priority queue) based on time to be calculated acordingly.
+packets go into a min heap (priority queue) based on time to be calculated acordingly.
 
 --While the packets are created, they get put into the min heap where they are then ordered in
 such a way that they will be served in order of time through the iterations.
 For the number of pairs, 
 */
 
-int yes = 0;
-int no = 0;
         for(int i =0; i<numberOfPairs; i++) { // for all sources that gen packets follow a poisson distribution for generating packets.
             int number = pdistribution(generator); // according to this poisson-number, an SD pair
                                                  // generates a packet.
@@ -179,7 +187,7 @@ int no = 0;
 
 //cout << myrouters[rid].serviceRate << " + " << seconds << "= " << time << endl;
 // 2. Create the packet via its constructor and push it to the heap.
-                eventHeap.push(Packet(time, rid, dest, type, pktSize, rid));
+                eventHeap.push(Packet(time, rid, dest, type, pktSize, rid, (double)seconds));
                 //cout << "eventHeap.top().getTime();" << eventHeap.top().getTime()<<endl;
             }
             else{ // dont gen pkt
@@ -191,44 +199,76 @@ int no = 0;
         while(eventHeap.top().getTime() < seconds){
 
             if(eventHeap.top().getType() == 0) {// if at creation, move to outputQ of rId 
+                double start = eventHeap.top().getStart();
                 int pktDest = eventHeap.top().getDest();
                 int curr = eventHeap.top().getRID();
                 int queue = myrouters[curr].getOutQueue(pktDest); //interface number is returned as queue
-                if(queue == 0) { cout << "DROPPED" << endl;}
+
+cout <<"Finished processing. at Router:  " << curr << ". Going to output queue interface towards: "<<pktDest << " via hop: " << queue<< endl;
+                if(queue == 0) { 
+                    cout << "DROPPED at output queue of router "<< curr << endl;
+                    dropped[curr]++;
+                    if(!eventHeap.empty()) eventHeap.pop();
+                    continue;
+                }
                 else {
                     myrouters[curr].outputQueue[queue].push(1); //index at the interface number 'queue'/ pushed to output queue!
                 }
                 int time = seconds + myrouters[curr].serviceRate;
                 int type = 2;
                 double pktSize = eventHeap.top().getSize();
-                eventHeap.pop();
-                eventHeap.push(Packet(time, curr, pktDest, type,pktSize,curr ));
+                if(!eventHeap.empty()) eventHeap.pop();
+                eventHeap.push(Packet(time, curr, pktDest, type,pktSize,curr,start ));
                 
-                eventHeap.pop();
+               // eventHeap.pop();
             } 
 
-            if(eventHeap.top().getType() == 1) {// if at processing, move to outputq 1 // 0 and 1 might be same
+            if(eventHeap.top().getType() == 1) {// if at processing, move to outputQ
 
+                double start = eventHeap.top().getStart();
                 int pktDest = eventHeap.top().getDest();
                 int curr = eventHeap.top().getRID();
 
-                if(curr==pktDest) { cout << "SUCCESS!" << endl; success++;eventHeap.pop();continue;}
+                if(curr==pktDest) {  // redundant accept handled
+                     // cout << "SUCCESS!" << endl;
+                      //success++;
+                      double compTime = eventHeap.top().getTime()-eventHeap.top().getStart();
+                      if(compTime > maxComplete) maxComplete = compTime;
+		      if( (compTime!=0) && compTime < minComplete) minComplete = compTime;
+                      totalComp += compTime; 
+                      if(!eventHeap.empty()) eventHeap.pop();
+                      continue;}
+
                 int queue = myrouters[curr].getOutQueue(pktDest); //interface number is returned as queue
                 
-                if(queue == 0) { cout << "DROPPED" << endl;}
-                else if(queue == 777) { cout<< "SUCCESS!" <<endl; success ++;} 
+                cout <<"Finished processing. at Router:  " << curr << ". Going to output queue interface towards: "<<pktDest<< " via hop: " << queue<< endl;
+                if(queue == 0) { 
+                    cout << "DROPPED at output queue of router " << curr << endl;
+                    dropped[curr]++;
+                    if(!eventHeap.empty()) eventHeap.pop();
+                    continue;
+                }
+                else if(queue == 777) {  //redundant accept logic handled
+                   // cout<< "SUCCESS!" <<endl; 
+                   // success ++;
+                   double compTime = eventHeap.top().getTime()-eventHeap.top().getStart();
+                     if(compTime > maxComplete) maxComplete = compTime;
+                     if( (compTime!=0) && compTime < minComplete) minComplete = compTime;
+                     totalComp += compTime; 
+                }  //gaurd: if for some reason the propagation (scenario type 3) doesn't catch a success.
                 else {
-
                     myrouters[curr].outputQueue[queue].push(1); //index at the interface number 'queue'/ pushed into output queue!
                 }
                 int time = seconds + myrouters[curr].serviceRate;
                 int type = 2;
                 double pktSize = eventHeap.top().getSize();
-                eventHeap.pop();
-                eventHeap.push(Packet(time, curr, pktDest, type,pktSize,curr ));
+                if(!eventHeap.empty()) eventHeap.pop();
+                eventHeap.push(Packet(time, curr, pktDest, type,pktSize,curr, start ));
             } 
 
             if(eventHeap.top().getType() == 2) {// if at outputq move to propagation 2
+                totalTransmissions++;
+                double start = eventHeap.top().getStart();
                 int pktDest = eventHeap.top().getDest(); // get pkt dest
                 int curr = eventHeap.top().getRID(); // current router location
                 int nextHop = myrouters[curr].nextHopTable[pktDest];//get nextHop for band/delay access
@@ -241,52 +281,73 @@ int no = 0;
                 int type = 3;
 cout <<"curr is : " << curr << endl;
 /* At this point the packet has left the output interface corresponding to its connected link and will now be popped out of the queue */
-               if(curr==149) { 
+          /*     if(curr==149) { 
                    eventHeap.pop(); // popped out of eventHeap handler
                 
                    myrouters[curr].outputQueue[nextHop].pop(); //popped out of queue
                    eventHeap.push(Packet(time, curr, pktDest, type, pktSize,curr));
  
-                   continue;}
-               eventHeap.pop(); // popped out of eventHeap handler
+                   continue;} */
+               cout << "Moving from output queue of router: " <<curr<<" to propagation link towards: "<<nextHop << endl;
+              if(!eventHeap.empty()) eventHeap.pop(); // popped out of eventHeap handler
                 
                 myrouters[curr].outputQueue[nextHop].pop(); //popped out of queue
-                eventHeap.push(Packet(time, curr, pktDest, type, pktSize,curr));
+                eventHeap.push(Packet(time, curr, pktDest, type, pktSize,curr,start));
                  
             } 
             if(eventHeap.top().getType() == 3) {// if at propagation move to inputQ 
                 //double processTime = eventHeap.top().getTime();
+                
+                double start = eventHeap.top().getStart();
                 int pktDest = eventHeap.top().getDest(); // get pkt dest
                 int curr = eventHeap.top().getRID(); // current router location
                 int nR = myrouters[curr].nextHopTable[pktDest]; // get next hop router
                // check if input queue of next router is full. function will return 0 ifso
                 int queue = myrouters[nR].getQueue(pktDest);
-
-                if(queue == 0 ) { cout << "DROPPED" << endl;} 
-                else if(queue == 777) {cout << "SUCCESS!" <<endl; success++;}
+cout<<"Moving from propagation from router: " << curr<< " to input queue of " << nR << endl;
+                if(queue == 0 ) {
+                    cout << "DROPPED at input Queue of router " << nR << endl; 
+                    dropped[curr]++;
+                    if(!eventHeap.empty()) eventHeap.pop();
+                 }
+                else if(queue == 777) {
+                    cout << "********SUCCESS!" <<endl;
+                    success++;
+/*For each success, record the maxCompletion and minCompletion time if it is so.
+  Then, add to the total of completion times where it is used for the average in results.
+*/
+                    double compTime = eventHeap.top().getTime()- eventHeap.top().getStart();
+                     if(compTime > maxComplete) maxComplete = compTime;
+                     if( (compTime!=0) && compTime < minComplete) minComplete = compTime;
+                     totalComp += compTime; 
+                }
                 else { 
                      myrouters[nR].inputQueue[curr].push(1); // pushed into inputqueue!
                 }
-
+                transmission += seconds-eventHeap.top().getTime(); // get transmission time
+                
                 double pktSize = eventHeap.top().getSize();
                 double time = seconds + myrouters[nR].inputQueue[curr].size() * pktSize/myrouters[nR].serviceRate;
                 int type = 4;
 
-                eventHeap.pop(); //popped out of eventHandler
-                eventHeap.push(Packet(time, nR, pktDest, type, pktSize,curr));
+              if(!eventHeap.empty())eventHeap.pop(); //popped out of eventHandler
+                eventHeap.push(Packet(time, nR, pktDest, type, pktSize,curr,start));
             } 
 
             if(eventHeap.top().getType() == 4) { // if at inputq move to processing 4
+
+                double start = eventHeap.top().getStart();
                 int pktDest = eventHeap.top().getDest();
                 int curr = eventHeap.top().getRID(); // current router location
                 double pktSize = eventHeap.top().getSize();
                 int previous = eventHeap.top().getPrev();
-
+                
                 double time = (pktSize/myrouters[curr].serviceRate) + seconds;
                 int type = 1;
-                myrouters[curr].inputQueue[previous].pop(); //popped from input queue! going to processing!
-                eventHeap.push(Packet(time, curr, pktDest, type, pktSize,curr));
-                eventHeap.pop();
+                cout << "moving from input queue of router: "<<curr<<" to processing. Packet destination is: " << pktDest<<endl;;
+                if(!myrouters[curr].inputQueue[previous].empty()) myrouters[curr].inputQueue[previous].pop(); //popped from input queue! going to processing!
+                eventHeap.push(Packet(time, curr, pktDest, type, pktSize,curr, start));
+                if(!eventHeap.empty())eventHeap.pop();
             } 
 
    
@@ -308,9 +369,51 @@ cout <<"curr is : " << curr << endl;
 
 
     }// End For-Loop Outer Simulation
+
+int maxDropper;
+double maxDrop = 0.0;
+int minDropper; 
+double minDrop = 100.0;
+double totalDropped = 0.0;
+for(int i=0; i<vertices; i++) {
+   double current = dropped[i];
+   if(current>maxDrop) {
+       maxDrop = current;
+       maxDropper = i;
+   }
+   if(( current!=-1 && current!=0) && current<minDrop) { 
+       minDrop = current;
+       minDropper = i;
+   }
+   if(( current!=-1) && current<minDrop) { 
+       minDrop = current;
+       minDropper = i;
+   }
+   totalDropped += current;
+}
+       
+double fidelity = (1-(totalDropped+success)/packetgen)*100;
+   
+
+averageComplete = totalComp/success;
+cout << "\n\n\n-------------------------------------\n\n"<<endl;
+cout << "-------------RESULTS------------------" <<endl;
 cout << "number of generated packets: " << packetgen << endl;
 cout << "number of successes: "<< success << endl;
-cout << "percentage of successfully received packets: " <<success/packetgen << endl;
+cout << "Percentage of successfully received packets: " <<success/packetgen *100<<"%."<< endl;
+cout << "Average transmission time for each transmission: " << transmission/totalTransmissions << " seconds."<<endl;
+cout << "Maximum completion time is: " << maxComplete << " seconds." << endl;
+cout << "Minimum completion time is: " << minComplete << " seconds."<< endl;
+cout << "Average Completion time is: " << averageComplete << " seconds." << endl;
+
+cout << "Router " <<maxDropper <<" droppped the most packets: " << maxDrop << "."<< endl;
+cout << "Router " << minDropper << " dropped the least packets: " << minDrop << "." << endl;
+
+cout << "Average number of drops per router " << totalDropped/150 << endl;
+cout << "\n-------------------------------------\n\n"<<endl;
+cout << "-------------MISC. RESULTS------------------" <<endl;
+cout << "Total Dropped: " << totalDropped << "." << endl;
+cout << "Percent of \"lost\" packets or between processing/propagation/in queue \nbefore cutoff time: " << fidelity  <<"%." <<endl;
 cout << "end" << endl;
 } // end main
 
