@@ -1,0 +1,98 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf200
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\margl1440\margr1440\vieww17440\viewh15420\viewkind0
+\deftab720
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 NETWORK EVENT SIMULATOR      \
+\
+Type make and all files will compile:          \
+_______________________________________\
+\
+\
+1. INTRODUCTION\
+___________________________________________________________________________\
+\
+This program takes in a text file and seed as input in the following format:\
+\
+./runprogram 3 file.txt \
+\
+In this case 3 is the seed and file.txt is the filename \
+The text file consist of integers that will represent nodes in a graph. There are two functions that deal with the beginning of this. The functions include fileToGraph and GraphToFile. \
+\
+The nodes are then created in a graph of Links and Routers with edge weights (bandwidth and delay)\
+\
+The links are randomly created as well as the bandwidth and delay.\
+\
+Once the nodes are created, Depth First Search is run to ensure the connectivity of the graph. If the DFS function fails, links are added until the graph is connected. The graph must be connected for the simulation to work. \
+\
+___________________________________________________________________________\
+\
+\
+\
+2. Pairs and Link Structures\
+\
+______________________________________________________________\
+\
+\
+The Link data structure uses uniform real distribution to randomly set the bandwidth and delay.\
+Each link has a setBD and getBD(bandwidth+delay), which equals the total costs. We use the total cost later \
+For Dijkstra\'92s shortest path algorithm. We randomly selected 20 source-destinations pairs in the file to begin generatin\
+And transmitting traffic. \
+\
+______________________________________________________________\
+\
+\
+\
+\
+\
+\pard\pardeftab720\sl280\partightenfactor0
+\cf2 \outl0\strokewidth0 3. Router/node structure & Packet\
+\
+____________________________________________________________\
+\
+\
+Each node or \'91router\'92 will keep track of a routing table that is calculated by Dijkstra\'92s algorithm for \
+The minimum cost from a source a to destination b. Once this is calculated, each node stores it\'92s next best hop \
+To determine where to send the packets out of. \
+\
+The Packet structure consists of types, time, and destination fields. We also use the size of a packet to calculate\
+Its time to travel from node a to b \
+\
+Each router has an input and output queue which queues 30 packets at once and determines time by packetsize/bandwidth and delay \
+\
+\
+___________________________________________________________\
+\
+\cf2 \outl0\strokewidth0 \strokec2 \
+\pard\pardeftab720\sl280\partightenfactor0
+\cf2 \
+4. Time simulation\
+\
+____________________________________________________\
+\
+Time the simulator runs in a for loop of 1,000 \'93seconds\'94, and generates information such as the total number\
+Of packets generated, total number of packets that have reached, and average packet transmission time. \
+\
+For each \'93second\'94 of time here, all events are processed within that loop. \
+\
+\
+\
+\
+\
+________________________________________________\
+\
+\
+\
+-----------------------------------\
+Seed\
+-----------------------------------\
+----------------------------------\
+The 'seed' used in the generator engines is 3. This should produce the same results from every machine.\
+\
+\
+\
+}
