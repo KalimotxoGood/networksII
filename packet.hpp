@@ -11,13 +11,17 @@
 class Packet
 {
     public:
-    Packet(double t, int rid, int dest, int type, double pktSize){
+    Packet(double t, int rid, int dest, int type, double pktSize, int curr){
         setTime(t);
         setRID(rid);
         setDest(dest);
         setType(type);
         setSize(pktSize);
+        setPrev(curr);
     }   
+    void setPrev(int curr){
+         previous = curr;
+    }
     void setTime(double t){
         time = t;
     }
@@ -54,7 +58,9 @@ class Packet
     double getSize() const { 
           return size;
     }
-    
+    int getPrev() const{
+          return previous;
+    }
     private: 
     
     double time; // time used to determine when its current state will be finished.
@@ -62,7 +68,7 @@ class Packet
     int routerId; // update current router id each time pkt moves 3->5
     int destination; // destination static
     double size;
-
+    int previous;
 
 };
 

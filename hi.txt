@@ -1,4 +1,0 @@
-Num of Nodes    Num of Edges
-____________________________
-     5              0____________________________
-Num of Nodes    Num of Edges
