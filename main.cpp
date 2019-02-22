@@ -40,20 +40,88 @@ int main(int argc, char* argv[])
     
     int seed = atoi(argv[1]); // seed value for random number generators
     if(seed == 20) seed =19; //for some reason only seed of 20 causes unsuspected behavior...
-
+    string filename = argv[2];
+    
+cout << filename <<endl;
+   
     default_random_engine generator(seed);
     uniform_real_distribution<double> distribution(0.0, 1.0);
     poisson_distribution<int> pdistribution(5);
     double num = distribution(generator);
     srand(seed);
-// create the adjacency matrix of links. All initlized to '0'
     array<array<Link, vertices>, vertices> mylink;
     Router myrouters[vertices]; 
+
+
+    ifstream f(filename.c_str());
+    if(f.good()){
+       
+       cout <<"Graph found will segfault if obscene size, however." <<endl;
+       //return 0;
+    
+// create the adjacency matrix of links. All initlized to '0'
+
+    int p = 2;
+    int q = 3;
+    int r = 0;
+    int n = 0;
+    int lines = 0;
+    int arr[vertices];
+    ifstream File;
+    File.open(filename);
+    while(!File.eof())
+    {
+        File >> arr[n];             //puts each integer into an array
+        n++;
+    }
+    File.close();
+    r = arr[0];
+    lines = arr[1];
+    
+      //initialize graph with size of first int given from file (r)
+    for(int x = 0; x < r; x++)
+    {
+        for(int y = 0; y < r; y++)
+        {
+            mylink[x][y].setBD(0,0);           //set every part of matrix to 0 to simulate empty graph
+        }
+    }
+    for(int i = 0; i < n; i++)
+    {
+        mylink[arr[p]][arr[q]].setBD(1,1);       //assign p and q connections from file
+        if (p < n && q < n - 1)
+        {
+            p = p+2;           
+            q = q+2;
+        }
+    }
+
+    for(int i=0; i < r; i++) {
+        for(int j = 0; j < r; j++) {
+            cout << "providedGraph[" <<i<<"]["<<j<<"]"<<endl;
+        }
+    }
+    if(DFS(0,mylink,r)){
+        cout << "\n-------------------------------------\n\n"<<endl;
+        cout << "-----------RESULT of GRAPH------------" <<endl;
+        cout<< "the graph provided is connected" << endl;
+
+        cout << "\n-------------------------------------\n\n"<<endl;
+    }
+    else {
+        cout << "the graph is not connected" << endl;
+    }
+    if(r<150) {
+        cout << "The graph submitted is not of size 150 nodes. Please try again with a graph of 150 nodes"<<endl;
+
+        cout << "\n-------------------------------------\n\n"<<endl;
+        cout << "Exiting...." <<endl;
+    }
+    }
     /* While DFS returns an unconnected graph, connect hosts with links by (numberOfHosts/2).
    DFS takes an adjacency matrix (mylink) by reference. mylink edges are updated such that 
    the ingress/egress propagation/bandwidth numbers are symetrical as that is how we designed our network.
 */
-
     int k = 0;
     int l = 0;
    // if(
@@ -93,7 +161,10 @@ Write the graph into the desired file format
 //return 0;
 //cout << "links: " << links << endl;
     std::ofstream myfile;
-    myfile.open("graph.txt");
+    if(f.good()){
+        myfile.open(filename);
+    }
+    else myfile.open("graph.txt");
     if(myfile.is_open())
     {
         myfile << vertices << " " << links << "  \n";
@@ -374,6 +445,8 @@ int maxDropper;
 double maxDrop = 0.0;
 int minDropper; 
 double minDrop = 100.0;
+double minDrop2 = 100.0; //the second lowest since there seems to be lingering nodes which don't drop any packets. This may be due to the fact that no packets ever reach them via dijkstra's algorithm.
+
 double totalDropped = 0.0;
 for(int i=0; i<vertices; i++) {
    double current = dropped[i];
@@ -396,8 +469,8 @@ double fidelity = (1-(totalDropped+success)/packetgen)*100;
    
 
 averageComplete = totalComp/success;
-cout << "\n\n\n-------------------------------------\n\n"<<endl;
-cout << "-------------RESULTS------------------" <<endl;
+cout << "\n\n\n-------------------------------------"<<endl;
+cout << "-------------RESULTS-----------------" <<endl;
 cout << "number of generated packets: " << packetgen << endl;
 cout << "number of successes: "<< success << endl;
 cout << "Percentage of successfully received packets: " <<success/packetgen *100<<"%."<< endl;
@@ -411,7 +484,8 @@ cout << "Router " << minDropper << " dropped the least packets: " << minDrop << 
 
 cout << "Average number of drops per router " << totalDropped/150 << endl;
 cout << "\n-------------------------------------\n\n"<<endl;
-cout << "-------------MISC. RESULTS------------------" <<endl;
+cout <<" note: if your filename was not found, the network topology will be printed to graph.txt" <<endl;
+cout << "-------------MISC. RESULTS------------" <<endl;
 cout << "Total Dropped: " << totalDropped << "." << endl;
 cout << "Percent of \"lost\" packets or between processing/propagation/in queue \nbefore cutoff time: " << fidelity  <<"%." <<endl;
 cout << "end" << endl;
@@ -432,6 +506,6 @@ bool DFS(int i, array<array<Link,vertices>,vertices> &mylinks,const int vertices
     for(int j = 0; j < vertices; j++)
         if(visited[j]!=0) visite++;
 
-    if(visite==vertices){cout << "connected" <<endl; return true;}
+    if(visite==vertices){/*cout << "connected" <<endl;*/ return true;}
     else return false;
 }
